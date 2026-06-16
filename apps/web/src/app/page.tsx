@@ -14,9 +14,15 @@ import { DailyForecast } from "@/components/forecast/DailyForecast";
 import { AirQuality } from "@/components/forecast/AirQuality";
 import { usePreferences } from "@/hooks/usePreferences";
 import { useWeather } from "@/hooks/useWeather";
+import { useAuth } from "@/hooks/useAuth";
+import { useFavorites } from "@/hooks/useFavorites";
+import { AuthPanel } from "@/components/auth/AuthPanel";
+import { FavoritesPanel } from "@/components/favorites/FavoritesPanel";
 
 function Dashboard() {
   const prefsApi = usePreferences();
+  const auth = useAuth();
+  const favorites = useFavorites(auth.accessToken);
   const [active, setActive] = useState<ActiveLocation | null>(null);
 
   const onSelect = useCallback((loc: ActiveLocation) => {
@@ -45,6 +51,9 @@ function Dashboard() {
 
         <main className="content" aria-busy={active !== null && isLoading}>
           <LocationSearch onSelect={onSelect} bootstrap={active === null} />
+
+          <AuthPanel auth={auth} />
+          <FavoritesPanel api={favorites} active={active} onSelect={onSelect} />
 
           {!active && (
             <div className="glass status" role="status">

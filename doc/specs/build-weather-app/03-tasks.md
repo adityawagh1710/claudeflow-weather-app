@@ -12,9 +12,21 @@
 | ⏳ Pending | 0 |
 | 🔄 In Progress | 0 |
 | ✅ Completed | 13 |
-| 🔄 Partial | 4 (Task 1.1, 3.3, 5.2, 5.3) |
-| ⛔ Blocked (env) | 8 |
+| 🔄 In Progress | 0 |
+| 🔄 Partial | 9 (1.1, 1.3, 1.4, 2.4, 2.8, 3.2, 3.3, 5.2, 5.3) |
+| ⛔ Blocked (env) | 3 (2.10, 4.2, 3.4 — Rust/live-verify) |
 | **Total** | **25** |
+
+> **Session 4 (2026-06-16) — complete.** Supabase slice built as verifiable code (no live
+> project). 🔄 1.3 (migration SQL + RLS + signup trigger), 🔄 1.4 (supabase client + auth
+> hooks, gated on `isSupabaseConfigured()`), 🔄 2.4 (auth API routes: favorites CRUD + prefs,
+> 401/400/409, JWT verify, logging+error-capture), 🔄 2.8 (favorites sync UI: add/list/
+> reorder/remove/quick-switch, optimistic + localStorage fallback; gated auth UI), 🔄 3.2
+> (mocked-integration tests for the routes). Added `@supabase/supabase-js`, `.env.example`.
+> Verified: typecheck clean, **154 tests pass**, src/lib coverage 95.36%/89.41% (gate holds),
+> `next build` ✓ (no Supabase env needed), E2E 5/5. **Deferred to live Supabase:** real OAuth,
+> RLS enforcement, JWT acceptance, cross-device sync, signup-trigger firing.
+> **Hard-blocked (Rust/system-webkit/display):** 2.10, 4.2, 1.1-desktop; live RLS verify 3.4.
 
 > **Incremental decompose 2026-06-16 15:00:** Added Phase 5 (Observability & Analytics)
 > tasks 5.1–5.4 from Changelog 14:30 / spec §12.
@@ -111,9 +123,13 @@ Implement the visual foundation per spec §6 (FR-7) and design rules:
 ---
 
 ### Task 1.3: Supabase project, schema migrations, RLS
-**Status:** ⏳ pending
+**Status:** 🔄 partial (SQL artifact written; apply-to-live-instance verification deferred)
+**Completed (artifact):** 2026-06-16
 **Priority:** high
 **Depends On:** none
+**Summary:** `supabase/migrations/0001_init.sql` (exact §3 schema, RLS on all 3 tables,
+SECURITY DEFINER signup trigger seeding profiles + default preferences) + `0002_indexes.sql`.
+Deferred: applying to a live instance; RLS cross-user enforcement verification (see 3.4).
 
 **Description:**
 Create Supabase project and migrations per spec §3 for tables `profiles`,
@@ -134,9 +150,14 @@ row on user signup.
 ---
 
 ### Task 1.4: Supabase client + auth session wiring
-**Status:** ⏳ pending
+**Status:** 🔄 partial (web client + auth hooks done; desktop OAuth + live session deferred)
+**Completed (web):** 2026-06-16
 **Priority:** high
 **Depends On:** Task 1.1, Task 1.3
+**Summary:** `lib/supabase.ts` (browser/server factories, `isSupabaseConfigured()`),
+`lib/auth.ts` (`verifyAccessToken`, `getBearerToken`), `hooks/useAuth.ts` (email + OAuth,
+disabled no-op when unconfigured). Deferred: Tauri loopback/deep-link OAuth, live session
+persistence/refresh.
 
 **Description:**
 Add `lib/supabase` client. Implement desktop auth (spec FR-1): email + at least one
@@ -221,9 +242,14 @@ clear error envelopes.
 ---
 
 ### Task 2.4: API routes — `/api/favorites`, `/api/prefs` (auth-required)
-**Status:** ⏳ pending
+**Status:** 🔄 partial (routes implemented + mock-tested; live Supabase integration deferred)
+**Completed (code):** 2026-06-16
 **Priority:** high
 **Depends On:** Task 1.3, Task 1.4
+**Summary:** `/api/favorites` (GET/POST, 409 unique), `/api/favorites/[id]` (PATCH/DELETE),
+`/api/prefs` (GET/PUT upsert). JWT verify → 401; validation → 400; `{error}` envelopes;
+withRequestLogging + captureException; RLS defense-in-depth. Schemas in lib (tested).
+Deferred: live JWT acceptance + RLS.
 
 **Description:**
 Implement auth-required routes (spec §5) verifying the Supabase JWT from
@@ -303,9 +329,13 @@ Units/time format driven by preferences at render.
 ---
 
 ### Task 2.8: Favorites management UI + sync (FR-6)
-**Status:** ⏳ pending
+**Status:** 🔄 partial (UI + hooks + optimistic/local-fallback done; cross-device sync deferred)
+**Completed (web):** 2026-06-16
 **Priority:** high
 **Depends On:** Task 2.4, Task 2.5
+**Summary:** `useFavorites`/`useRemotePreferences` (remote+optimistic when signed in,
+localStorage fallback otherwise), `FavoritesPanel` (add/list/reorder/remove/quick-switch,
+accessible), gated `AuthPanel`. Deferred: cross-device sync verification (live Supabase).
 
 **Description:**
 Add current location to favorites; list, reorder (sort_order), remove; quick-switch
@@ -381,9 +411,13 @@ TDD unit coverage for normalization (WMO mapping, missing AQI) and all unit conv
 ---
 
 ### Task 3.2: Integration tests — API routes
-**Status:** ⏳ pending
+**Status:** 🔄 partial (auth routes mock-tested; live Supabase integration test deferred)
+**Completed (mocked):** 2026-06-16
 **Priority:** high
 **Depends On:** Task 2.3, Task 2.4
+**Summary:** `favoritesRoute`, `favoriteIdRoute`, `prefsRoute` tests with mocked Supabase
+client + token verify (401/400/409, CRUD shapes, enum validation). Deferred: integration
+against a live Supabase instance.
 
 **Description:**
 Integration tests for all `/api/*` routes with mocked Open-Meteo + Supabase: auth

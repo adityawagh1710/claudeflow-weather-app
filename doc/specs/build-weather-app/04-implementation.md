@@ -10,12 +10,41 @@
 | Status | Count |
 |--------|-------|
 | ✅ Completed | 13 |
-| 🔄 Partial | 4 (1.1 web-only; 3.3 E2E subset; 5.2 metrics; 5.3 error-tracking) |
+| 🔄 Partial | 9 (1.1, 1.3, 1.4, 2.4, 2.8, 3.2, 3.3, 5.2, 5.3) |
 | ⏳ Pending | 0 |
-| ⛔ Blocked (env) | 8 |
+| ⛔ Blocked (env) | 3 (2.10, 4.2, 3.4) |
 | **Total** | **25** |
 
 ## Session Log
+
+### Session 4 — 2026-06-16 (Supabase auth/data slice — code-complete, live-verify deferred)
+
+Built the Supabase-dependent slice as correct, mock-tested code gated behind env so the app
+still builds/runs without a Supabase project.
+
+**Tasks (all 🔄 partial — code done, live verification deferred):** 1.3 (migration SQL +
+RLS + signup trigger), 1.4 (client + auth hooks), 2.4 (auth API routes), 2.8 (favorites
+sync UI/hooks), 3.2 (mocked-integration tests).
+
+**Verification (independently re-run):**
+- `npm run typecheck` → clean.
+- `npm run test:coverage` → **154 tests pass**; src/lib **95.36% lines / 89.41% branches /
+  98.11% functions** (gate ≥80% holds).
+- `npm run build` → ✓ (does NOT require Supabase env); new dynamic routes `/api/favorites`,
+  `/api/favorites/[id]`, `/api/prefs`.
+- `npx playwright test` → **5/5 pass** (favorites/auth UI added without breaking flows or a11y).
+
+**Files added:** `supabase/migrations/0001_init.sql`, `0002_indexes.sql`; `src/lib/`
+`supabase.ts`, `auth.ts`, `favorites.ts`, `favoritesApi.ts`, `localFavorites.ts`;
+`src/hooks/` `useAuth.ts`, `useFavorites.ts`, `useRemotePreferences.ts`;
+`src/app/api/favorites/route.ts`, `favorites/[id]/route.ts`, `prefs/route.ts`;
+`src/components/favorites/FavoritesPanel.tsx`, `src/components/auth/AuthPanel.tsx`;
+`apps/web/.env.example`; tests `favoritesRoute/favoriteIdRoute/prefsRoute/auth/supabase/
+favoritesApi/favoritesLib/validationFavorites/localFavorites.test.ts`. Dep: `@supabase/supabase-js`.
+
+**Deferred to a live Supabase project:** real OAuth (loopback/deep-link on desktop), RLS
+cross-user enforcement, Supabase JWT acceptance, cross-device favorites/prefs sync, signup
+trigger firing. All marked in code comments.
 
 ### Session 3 — 2026-06-16 (Observability, spec §12)
 
