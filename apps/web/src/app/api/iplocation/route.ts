@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { clientIp } from "@/lib/clientIp";
 import { logger, timeProvider, withRequestLogging } from "@/lib/logger";
 import { metrics } from "@/lib/metrics";
 
@@ -28,7 +29,14 @@ export async function GET(request: Request): Promise<Response> {
         "ipapi",
         requestId,
         async () => {
-          const res = await fetch("https://ipapi.co/json/", {
+          // Query the client's IP when available; otherwise ipapi infers from
+          // the caller (the server) — which is why precise location comes from
+          // the browser Geolocation API on the client first.
+          const ip = clientIp(request);
+          const endpoint = ip
+            ? `https://ipapi.co/${ip}/json/`
+            : "https://ipapi.co/json/";
+          const res = await fetch(endpoint, {
             next: { revalidate: 600 },
           });
           if (!res.ok) {

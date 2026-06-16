@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGeocode } from "@/hooks/useGeocode";
 import type { GeocodeResult } from "@/lib/types";
 import { track } from "@/lib/analytics";
+import { requestBrowserLocation } from "@/lib/geolocation";
 
 export type ActiveLocation = {
   name: string;
@@ -44,6 +45,18 @@ export function LocationSearch({
     bootstrapped.current = true;
     let cancelled = false;
     (async () => {
+      // 1) Prefer the device's precise location (asks permission once).
+      const coords = await requestBrowserLocation();
+      if (cancelled) return;
+      if (coords) {
+        onSelect({
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          name: "Current location",
+        });
+        return;
+      }
+      // 2) Fall back to approximate IP-based location.
       try {
         const res = await fetch("/api/iplocation");
         if (!res.ok) return;
