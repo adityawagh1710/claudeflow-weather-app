@@ -7,12 +7,14 @@ import type {
   TimeFormat,
   Theme,
 } from "@/lib/types";
+import { setAnalyticsOptIn } from "@/lib/analytics";
 
 export type Preferences = {
   tempUnit: TempUnit;
   windUnit: WindUnit;
   timeFormat: TimeFormat;
   theme: Theme;
+  analyticsOptIn: boolean;
 };
 
 const STORAGE_KEY = "weather-prefs";
@@ -22,6 +24,7 @@ const DEFAULTS: Preferences = {
   windUnit: "kmh",
   timeFormat: "24h",
   theme: "system",
+  analyticsOptIn: false,
 };
 
 function readStored(): Preferences {
@@ -45,13 +48,18 @@ export function usePreferences() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setPrefs(readStored());
+    const stored = readStored();
+    setPrefs(stored);
+    setAnalyticsOptIn(stored.analyticsOptIn);
     setHydrated(true);
   }, []);
 
   const update = useCallback((patch: Partial<Preferences>) => {
     setPrefs((prev) => {
       const next = { ...prev, ...patch };
+      if (patch.analyticsOptIn !== undefined) {
+        setAnalyticsOptIn(patch.analyticsOptIn);
+      }
       if (typeof window !== "undefined") {
         try {
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -70,5 +78,6 @@ export function usePreferences() {
     setWindUnit: (windUnit: WindUnit) => update({ windUnit }),
     setTimeFormat: (timeFormat: TimeFormat) => update({ timeFormat }),
     setTheme: (theme: Theme) => update({ theme }),
+    setAnalyticsOptIn: (analyticsOptIn: boolean) => update({ analyticsOptIn }),
   };
 }

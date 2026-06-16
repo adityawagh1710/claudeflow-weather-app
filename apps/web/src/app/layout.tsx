@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Observability } from "@/components/observability/Observability";
 
 export const metadata: Metadata = {
   title: "Weather",
@@ -13,7 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="light" suppressHydrationWarning>
-      <body>{children}</body>
+      <body>
+        <Observability />
+        {children}
+      </body>
     </html>
   );
 }

@@ -9,13 +9,36 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Completed | 11 |
-| 🔄 Partial | 2 (Task 1.1 web-only; Task 3.3 web-core E2E subset) |
+| ✅ Completed | 13 |
+| 🔄 Partial | 4 (1.1 web-only; 3.3 E2E subset; 5.2 metrics; 5.3 error-tracking) |
 | ⏳ Pending | 0 |
 | ⛔ Blocked (env) | 8 |
-| **Total** | **21** |
+| **Total** | **25** |
 
 ## Session Log
+
+### Session 3 — 2026-06-16 (Observability, spec §12)
+
+Added Phase 5 via incremental decompose, then implemented the web-doable tasks.
+
+**Tasks:** ✅ 5.1 (structured logging + requestId), ✅ 5.4 (opt-in analytics),
+🔄 5.2 (web-vitals + RED/cache metrics — TSDB export + sync-health deferred),
+🔄 5.3 (SDK-agnostic error tracking — live DSN + source-maps deploy-gated).
+
+**Verification (independently re-run):**
+- `npm run typecheck` → clean.
+- `npm run test:coverage` → **82 tests pass**; src/lib **93.75% lines / 86.54% branches /
+  95.45% functions** (gate ≥80% aggregate, holds).
+- `npm run build` → ✓, 6 API routes compile.
+
+**Files added (apps/web):** `src/lib/logger.ts`, `analytics.ts`, `metrics.ts`,
+`errorTracking.ts`; `src/app/api/{vitals,metrics,analytics}/route.ts`;
+`src/components/observability/Observability.tsx`; tests `logger/analytics/metrics/errorTracking.test.ts`.
+**Changed:** three existing API routes wired to logger + error tracking + `x-request-id`;
+`usePreferences` (+`analyticsOptIn`), `PreferencesBar` (opt-in toggle), `layout.tsx` (vitals reporter).
+
+**Deferred (env-gated):** real metrics TSDB export + sync-health metrics (Supabase Task 2.8);
+live error-tracking DSN + source-map upload (deploy). Both noted in code comments.
 
 ### Session 2 — 2026-06-16
 

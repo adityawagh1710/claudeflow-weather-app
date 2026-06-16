@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGeocode } from "@/hooks/useGeocode";
 import type { GeocodeResult } from "@/lib/types";
+import { track } from "@/lib/analytics";
 
 export type ActiveLocation = {
   name: string;
@@ -78,6 +79,8 @@ export function LocationSearch({
       latitude: r.latitude,
       longitude: r.longitude,
     });
+    // Count-only: never include the query text or the chosen coordinates.
+    track("location_searched");
     setQuery(r.name);
     setOpen(false);
   };

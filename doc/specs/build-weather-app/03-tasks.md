@@ -2,8 +2,8 @@
 
 **Spec:** doc/specs/build-weather-app/02-specification.md
 **Created:** 2026-06-16 00:00
-**Last Updated:** 2026-06-16 00:00
-**Last Decompose:** 2026-06-16 00:00
+**Last Updated:** 2026-06-16 15:00
+**Last Decompose:** 2026-06-16 15:00
 
 ## Summary
 
@@ -11,10 +11,19 @@
 |--------|-------|
 | ⏳ Pending | 0 |
 | 🔄 In Progress | 0 |
-| ✅ Completed | 11 |
-| 🔄 Partial | 2 (Task 1.1, Task 3.3) |
+| ✅ Completed | 13 |
+| 🔄 Partial | 4 (Task 1.1, 3.3, 5.2, 5.3) |
 | ⛔ Blocked (env) | 8 |
-| **Total** | **21** |
+| **Total** | **25** |
+
+> **Incremental decompose 2026-06-16 15:00:** Added Phase 5 (Observability & Analytics)
+> tasks 5.1–5.4 from Changelog 14:30 / spec §12.
+> **Session 3 — complete.** ✅ 5.1 (structured logging + requestId, PII scrubber, provider
+> timing), ✅ 5.4 (opt-in analytics, DNT/GPC honored, payload whitelist), 🔄 5.2 partial
+> (web-vitals → /api/vitals + in-process RED/cache /api/metrics; TSDB export + sync-health
+> deferred), 🔄 5.3 partial (SDK-agnostic error tracking, fail-closed PII scrub, version/
+> platform/online tags; live DSN + source-maps deploy-gated). Verified: typecheck clean,
+> 82 tests pass, src/lib coverage 93.75%/86.54% (gate ≥80% holds), `next build` ✓ (6 routes).
 
 > **Session 2 (2026-06-16) — complete.** ✅ 3.5 (coverage gate: lib 97% lines / 93.75%
 > branches, 46 unit tests), ✅ 4.1 (a11y/perf: landmarks, combobox ARIA, contrast both
@@ -516,3 +525,135 @@ Tasks that can be executed in parallel (no dependencies between them):
 4. Task 2.5 + 2.8 + 2.9 → Task 2.10 (offline cache needs the data layers)
 5. Task 2.6/2.7/2.8/2.9/2.10 → Task 3.3 (E2E) → Task 3.5 (coverage gate)
 6. Task 3.1/3.2/3.3 → Task 3.5 → Task 4.2
+
+---
+
+## Phase 5: Observability & Analytics
+
+> Source: Spec §12 + Changelog 2026-06-16 14:30. Added via incremental decompose
+> 2026-06-16 15:00.
+
+### Task 5.1: Structured server logging + requestId correlation ✅
+**Status:** ✅ completed
+**Priority:** high
+**Added:** 2026-06-16 15:00
+**Started:** 2026-06-16 15:00
+**Completed:** 2026-06-16 15:30
+**Summary:** `lib/logger.ts` (single-line JSON, levels, `scrub()` for email/token/IP,
+`coarseCoord()` 2dp, `getRequestId`, `withRequestLogging`, `timeProvider` slow-warn).
+Wired into geocode/weather/iplocation; `x-request-id` echoed. 16 tests.
+**Source:** Changelog 2026-06-16 14:30 — Add Observability & Analytics
+**Depends On:** Task 2.3
+**Doable now:** YES (web core has API routes)
+
+**Description:**
+Add a structured JSON logger (`lib/logger.ts`) and wrap all `/api/*` route handlers
+(spec §12.1). Each request emits one line: `timestamp`, `level`, `requestId`, `route`,
+`method`, `status`, `durationMs`, `cacheHit`, coarse `provider`. Generate/propagate
+`requestId` from header `x-request-id` (create if absent) and echo it on the response.
+Coarsen coordinates to ~2 dp in logs; never log secrets, tokens, emails, or raw query
+text beyond length. Levels: debug/info/warn/error/fatal. Log Open-Meteo/ipapi latency +
+status; `warn` near fair-use thresholds.
+
+**Acceptance Criteria:**
+- [ ] Every API request emits exactly one structured log line with `requestId` + `durationMs`.
+- [ ] No secrets/PII/full-precision coordinates appear in any log (unit-tested scrubber).
+- [ ] `x-request-id` propagated in and echoed out.
+
+**Files to Modify:**
+- `apps/web/src/lib/logger.ts`, `src/app/api/*/route.ts`
+
+---
+
+### Task 5.2: Web-vitals + RED/cache metrics 🔄 PARTIAL
+**Status:** 🔄 partial (web parts done; TSDB export + sync-health deferred)
+**Completed (web):** 2026-06-16 15:30
+**Summary:** web-vitals reporter → `POST /api/vitals`; in-process `MetricsRegistry`
+(RED p50/p95 + cache-hit + provider health) via `GET /api/metrics`. Real TSDB export and
+sync-health (needs Supabase 2.8) deferred — noted in code.
+**Priority:** medium
+**Added:** 2026-06-16 15:00
+**Source:** Changelog 2026-06-16 14:30 — Add Observability & Analytics
+**Depends On:** Task 5.1
+**Doable now:** PARTIAL (RED + cache-hit + web-vitals doable; sync-health needs Supabase)
+
+**Description:**
+Per spec §12.3: emit RED metrics per route (rate/errors/duration p50/p95/p99) and
+weather/geocode cache-hit ratio from the logger data; report client web-vitals
+(LCP/INP/CLS) via the `web-vitals` package to a `/api/vitals` sink. Provider health
+(Open-Meteo/ipapi error rate + latency) surfaced. Sync-health metrics deferred until
+Supabase lands (Task 2.8).
+
+**Acceptance Criteria:**
+- [ ] RED + cache-hit metrics queryable/exportable per route.
+- [ ] LCP/INP/CLS reported from the running app.
+- [ ] Provider health metrics emitted.
+
+**Files to Modify:**
+- `apps/web/src/lib/metrics.ts`, `src/app/api/vitals/route.ts`, web-vitals reporter in layout
+
+---
+
+### Task 5.3: Client + server error tracking with PII scrubbing 🔄 PARTIAL
+**Status:** 🔄 partial (SDK-agnostic core done; live DSN + source-maps deploy-gated)
+**Completed (core):** 2026-06-16 15:30
+**Summary:** `lib/errorTracking.ts` — pluggable transport (no-op without `ERROR_TRACKING_DSN`),
+mandatory fail-closed `beforeSend` PII scrub, tags appVersion/platform/online. Wired to
+window error/unhandledrejection + route catches. Live DSN + source-map upload deferred.
+**Priority:** high
+**Added:** 2026-06-16 15:00
+**Source:** Changelog 2026-06-16 14:30 — Add Observability & Analytics
+**Depends On:** Task 5.1
+**Doable now:** PARTIAL (SDK wiring + scrubbing testable; live DSN/source-map upload needs deploy env)
+
+**Description:**
+Integrate a Sentry-compatible error tracker on client + server (spec §12.2). Mandatory
+`beforeSend` scrubbing strips emails, tokens, exact coordinates, IP; **fail closed**
+(drop event) if scrubbing can't apply. Tag events with `appVersion`, `platform`
+(web/desktop), `online`/`offline`. DSN via env; source maps uploaded at build (not
+shipped publicly).
+
+**Acceptance Criteria:**
+- [ ] Client + server errors reach the tracker (or no-op when DSN unset).
+- [ ] Test asserts synthetic email/token/coordinate removed before send.
+- [ ] Events tagged with version/platform/online-state.
+
+**Files to Modify:**
+- `apps/web/src/lib/errorTracking.ts`, instrumentation hooks, build config
+
+---
+
+### Task 5.4: Opt-in product analytics ✅
+**Status:** ✅ completed
+**Completed:** 2026-06-16 15:30
+**Summary:** `lib/analytics.ts` — opt-in (default off), DNT + GPC honored, rotating
+anonymous install id, per-event payload whitelist (no query text / location / user id).
+`analyticsOptIn` in usePreferences + accessible toggle in PreferencesBar; wired to
+search-select, unit + theme toggles. 9 tests incl. PII-leak assertions.
+**Priority:** medium
+**Added:** 2026-06-16 15:00
+**Source:** Changelog 2026-06-16 14:30 — Add Observability & Analytics
+**Depends On:** Task 5.1
+**Doable now:** YES (client events + opt-out scaffold; no backend required)
+
+**Description:**
+Anonymized aggregate events only (spec §12.4): `location_searched` (count, no query text),
+`favorite_added/removed`, `unit_toggled`, `theme_changed`, `offline_render`. No precise
+location, no search terms, no user id beyond a rotating anonymous install id. **Off until
+opt-in**; clear in-app opt-out disables product events (error reporting may remain). Honor
+DNT/platform privacy signals.
+
+**Acceptance Criteria:**
+- [ ] Product analytics off until opt-in; opt-out stops product events.
+- [ ] No location/search-text/user-id in any event payload (unit-tested).
+- [ ] DNT respected.
+
+**Files to Modify:**
+- `apps/web/src/lib/analytics.ts`, opt-in/out UI in PreferencesBar, `usePreferences`
+
+---
+
+## Phase 5 Parallelization
+- Task 5.1 first (logger underpins the rest).
+- After 5.1: Task 5.2, 5.3, 5.4 can proceed in parallel (independent modules).
+- Web-doable now: 5.1 (full), 5.4 (full), 5.2/5.3 (partial — full verification needs deploy/Supabase).
