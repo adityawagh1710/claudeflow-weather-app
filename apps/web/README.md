@@ -61,12 +61,17 @@ When Supabase env is absent, the auth UI is disabled and favorites/preferences p
 |-------|------|---------|
 | `GET /api/weather?lat=&lon=` | — | Normalized current + hourly + 7-day + air quality (Open-Meteo) |
 | `GET /api/geocode?q=` | — | City search candidates (Open-Meteo geocoding) |
-| `GET /api/iplocation` | — | Approximate location from request IP (first-launch bootstrap) |
+| `GET /api/iplocation` | — | Approximate location from the client IP (fallback when geolocation is unavailable; forwards `x-forwarded-for`, defaults to London) |
 | `GET/POST /api/favorites`, `PATCH/DELETE /api/favorites/[id]` | Bearer JWT | Saved locations (Supabase) |
 | `GET/PUT /api/prefs` | Bearer JWT | User preferences (Supabase) |
 | `POST /api/vitals` | — | Web-vitals sink (LCP/INP/CLS/FCP/TTFB) |
 | `GET /api/metrics` | — | In-process RED + cache-hit snapshot (stopgap; not a TSDB) |
 | `POST /api/analytics` | — | Opt-in anonymized product events |
+
+**First-launch location:** the app asks the browser's Geolocation API for your precise
+location first (one-time permission prompt). If you decline or it's unavailable, it falls
+back to `/api/iplocation`, then to a London default. Browser-derived locations are shown
+as "Current location" (the Geolocation API returns coordinates, not a city name).
 
 All requests get a structured JSON log line with an `x-request-id`; logs scrub PII and
 coarsen coordinates. Auth routes verify the Supabase JWT and return `{ error }` envelopes

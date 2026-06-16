@@ -13,7 +13,8 @@ accounts and cross-device sync.
 
 - **Web app + API** (`apps/web/`) — Next.js 15, React 19, TypeScript strict.
 - **Weather** — `weatherClient` normalizes Open-Meteo into a stable model; current,
-  hourly, 7-day, and air-quality views; city search + IP-based first-launch location.
+  hourly, 7-day, and air-quality views; city search + first-launch location via the
+  browser Geolocation API (falling back to IP-based, then a London default).
 - **Preferences** — °C/°F, km·h/mph, 12h/24h, light/dark/system (localStorage; syncs to
   Supabase when configured).
 - **Observability** — structured request logging with `x-request-id` + PII scrubbing,
