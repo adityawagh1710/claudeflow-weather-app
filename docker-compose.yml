@@ -1,0 +1,30 @@
+# Weather App — full app via Docker Compose.
+#
+#   docker compose up --build      start the app  -> http://localhost:3000
+#   docker compose down            stop and remove
+#
+# Runs with ZERO config (Open-Meteo is keyless; Supabase is optional and off).
+# To enable Supabase/error-tracking, create a root `.env` (Compose auto-loads it);
+# NEXT_PUBLIC_* are baked at build time, the rest are read at runtime.
+
+services:
+  web:
+    build:
+      context: ./apps/web
+      args:
+        # Build-time (Next.js inlines NEXT_PUBLIC_* during `next build`).
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-}
+    image: weather-web:${TAG:-latest}
+    container_name: weather-web
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Runtime server-only vars (safe to leave empty).
+      NODE_ENV: production
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      ERROR_TRACKING_DSN: ${ERROR_TRACKING_DSN:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    restart: unless-stopped
+    # Healthcheck is defined in the image (Dockerfile) and inherited here.

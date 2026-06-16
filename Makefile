@@ -10,7 +10,7 @@ ENV_FILE   ?= $(WEB_DIR)/.env
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build start test coverage e2e typecheck check clean \
-        docker-build docker-run docker-stop migrate
+        docker-build docker-run docker-stop up down migrate
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -60,6 +60,12 @@ docker-run: ## Run the image on $(PORT); passes $(ENV_FILE) if present
 
 docker-stop: ## Stop the running container
 	-docker stop $(IMAGE)
+
+up: ## Start the whole app via docker compose (build + run, http://localhost:$(PORT))
+	docker compose up --build -d
+
+down: ## Stop and remove the docker compose stack
+	docker compose down
 
 ## ----- Supabase -----
 

@@ -35,13 +35,25 @@ npm run dev          # http://localhost:3000
 
 No environment variables are required — Open-Meteo is keyless and Supabase is optional.
 
+## Run the whole app with Docker Compose
+
+```bash
+docker compose up --build      # builds + starts → http://localhost:3000
+docker compose down            # stops + removes
+```
+
+Runs with zero config (Open-Meteo is keyless; Supabase optional/off). To enable Supabase
+or error tracking, create a root `.env` — Compose auto-loads it (`NEXT_PUBLIC_*` are baked
+at build time, the rest read at runtime). `make up` / `make down` are shortcuts.
+
 ## Make targets (repo root)
 
 ```bash
 make help            # list targets
 make install         # npm ci in apps/web
 make dev             # run the web app
-make check           # typecheck + test + build
+make check           # typecheck + coverage + build
+make up / make down  # start / stop the full app via docker compose
 make docker-build    # build the production image
 make docker-run      # run it on :3000 (PORT/TAG overridable)
 ```
