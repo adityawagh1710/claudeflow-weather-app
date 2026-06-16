@@ -2,8 +2,9 @@
 
 import type { WeatherSnapshot } from "@/lib/types";
 import type { Preferences } from "@/hooks/usePreferences";
-import { wmoIcon, wmoLabel } from "@/lib/wmo";
+import { wmoLabel } from "@/lib/wmo";
 import { formatTemp, formatWind, degToCompass, formatTime } from "@/lib/units";
+import { WeatherIcon } from "@/components/ui/WeatherIcon";
 
 export function CurrentConditions({
   snapshot,
@@ -13,6 +14,7 @@ export function CurrentConditions({
   prefs: Preferences;
 }) {
   const { current, location } = snapshot;
+  const temp = formatTemp(current.temperature, prefs.tempUnit);
 
   return (
     <section
@@ -22,14 +24,20 @@ export function CurrentConditions({
     >
       <div className="hero-main">
         <span className="hero-icon" aria-hidden="true">
-          {wmoIcon(current.weatherCode)}
+          <WeatherIcon
+            code={current.weatherCode}
+            isDay={current.isDay}
+            size={120}
+          />
         </span>
         <div>
           <h2 id="current-heading" className="app-title">
             {location.name}
           </h2>
           <div className="hero-temp" data-testid="current-temp">
-            {formatTemp(current.temperature, prefs.tempUnit)}
+            <span key={temp} className="hero-temp-value">
+              {temp}
+            </span>
           </div>
           <p className="muted" style={{ margin: 0 }}>
             {wmoLabel(current.weatherCode)} · feels like{" "}

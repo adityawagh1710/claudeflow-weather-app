@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { FavoritesPanel } from "@/components/favorites/FavoritesPanel";
+import { WeatherBackground } from "@/components/atmosphere/WeatherBackground";
 
 function Dashboard() {
   const prefsApi = usePreferences();
@@ -38,6 +39,10 @@ function Dashboard() {
   return (
     <>
       <ThemeProvider theme={prefsApi.prefs.theme} />
+      <WeatherBackground
+        code={data ? data.current.weatherCode : null}
+        isDay={data ? data.current.isDay : true}
+      />
       <div className="shell">
         <header className="app-header">
           <div>
@@ -75,10 +80,18 @@ function Dashboard() {
 
           {data && (
             <>
-              <CurrentConditions snapshot={data} prefs={prefsApi.prefs} />
-              <HourlyForecast hourly={data.hourly} prefs={prefsApi.prefs} />
-              <DailyForecast daily={data.daily} prefs={prefsApi.prefs} />
-              <AirQuality airQuality={data.airQuality} />
+              <div className="enter" style={{ ["--enter-delay" as string]: "0ms" }}>
+                <CurrentConditions snapshot={data} prefs={prefsApi.prefs} />
+              </div>
+              <div className="enter" style={{ ["--enter-delay" as string]: "80ms" }}>
+                <HourlyForecast hourly={data.hourly} prefs={prefsApi.prefs} />
+              </div>
+              <div className="enter" style={{ ["--enter-delay" as string]: "160ms" }}>
+                <DailyForecast daily={data.daily} prefs={prefsApi.prefs} />
+              </div>
+              <div className="enter" style={{ ["--enter-delay" as string]: "240ms" }}>
+                <AirQuality airQuality={data.airQuality} />
+              </div>
             </>
           )}
         </main>
