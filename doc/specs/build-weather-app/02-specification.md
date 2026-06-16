@@ -307,3 +307,92 @@ weather-app/
 - Widgets, menu-bar/tray mini-view.
 - Localization / i18n beyond units and time format.
 - Commercial-tier weather provider migration.
+
+---
+
+## 12) Observability & Analytics
+
+Telemetry must be **privacy-respecting** and never leak secrets or precise personal
+location. All collection is opt-in where it concerns usage analytics; operational error
+reporting may default-on but must be scrubbed.
+
+### 12.1 Logging (server — remote Next.js API)
+- **Structured JSON logs** with a stable schema: `timestamp`, `level`, `requestId`,
+  `route`, `method`, `status`, `durationMs`, `cacheHit`, and (when present) a coarse
+  `provider` label (`open-meteo` / `ipapi`). No raw query strings containing user input
+  beyond a length, no full lat/lon at full precision (round to ~2 dp ≈ city level).
+- **Levels:** `debug` (dev only), `info` (request lifecycle), `warn` (degraded:
+  provider slow, AQI missing, cache miss storms), `error` (handled failures), `fatal`
+  (unhandled). Never log Supabase JWTs, service-role keys, emails, or auth tokens.
+- **Request correlation:** generate/propagate a `requestId` (header `x-request-id`)
+  from client → API → log lines so a single user action is traceable end-to-end.
+- **Provider observability:** log Open-Meteo/ipapi latency, status, and rate-limit
+  signals; emit a `warn` when fair-use thresholds are approached (supports §10 risk).
+
+### 12.2 Error tracking
+- Integrate an error-tracking SDK (e.g. Sentry-compatible) on **both** the client UI and
+  the server API. Capture stack traces, `requestId`, route, and release/version.
+- **PII scrubbing is mandatory:** strip emails, tokens, exact coordinates, and IP before
+  send. Use a `beforeSend` hook to enforce scrubbing; fail closed (drop event) if
+  scrubbing cannot be applied.
+- **Source maps** uploaded at build time for readable desktop/web stack traces; not
+  shipped in the public bundle.
+- Tag events with `appVersion`, `platform` (`web`/`desktop`), and `online`/`offline`
+  state so offline-path failures (§6 FR-8) are distinguishable.
+
+### 12.3 Metrics
+- **RED metrics** per API route: Rate (req/s), Errors (%), Duration (p50/p95/p99).
+- **Cache effectiveness:** hit ratio for weather/geocode (validates §5 caching + §10
+  fair-use mitigation).
+- **Provider health:** Open-Meteo/ipapi error rate and latency; alert on sustained
+  degradation.
+- **Sync health (when Supabase lands):** `pending_mutations` replay success/failure
+  rate and reconcile-conflict counts (validates §6 FR-8 + §10 conflict resolution).
+- **Client web vitals:** report LCP/INP/CLS and "first meaningful render < 1.5s on
+  cached data" (§7) as field metrics.
+
+### 12.4 Product analytics (opt-in)
+- Track anonymized, aggregate events only: `location_searched` (no query text — count
+  only), `favorite_added/removed`, `unit_toggled`, `theme_changed`, `offline_render`.
+- **No precise location, no search terms, no user identifiers** beyond an anonymous,
+  rotating install id. Honor a clear in-app analytics opt-out that disables product
+  events (operational error reporting may remain, still scrubbed).
+- Respect Do-Not-Track / platform privacy signals where available.
+
+### 12.5 Acceptance criteria (observability)
+- [ ] Every API request emits one structured log line with `requestId` and `durationMs`;
+      no secrets/PII/full-precision coordinates appear in any log.
+- [ ] Errors on client and server reach the tracker with scrubbing verified (test asserts
+      a synthetic email/token/coordinate is removed before send).
+- [ ] RED + cache-hit metrics are queryable for each route; a dashboard or export exists.
+- [ ] Product analytics are off until opt-in; toggling opt-out stops product events.
+- [ ] Web-vitals (LCP/INP/CLS) are reported from the running app.
+
+> **Status note:** Observability is **not implemented** in the current web-core slice
+> (Session 1). It is net-new scope; see Changelog 2026-06-16 and the new tasks created by
+> re-running `/spec:decompose`.
+
+---
+
+## Changelog
+
+> Datetimes drive incremental `/spec:decompose`. Newest first.
+
+### 2026-06-16 14:30 — Add Observability & Analytics
+- **Changes:**
+  - Added §12 "Observability & Analytics" (logging, error tracking, metrics, opt-in
+    product analytics, and observability acceptance criteria).
+- **New requirements:**
+  - Structured, PII/secret-free JSON request logging with `requestId` correlation
+    (client → API) and provider latency/rate-limit observability.
+  - Client + server error tracking with mandatory `beforeSend` PII scrubbing and
+    build-time source maps; events tagged with version/platform/online-state.
+  - RED metrics per API route, cache-hit ratio, provider health, sync health (when
+    Supabase lands), and field web-vitals reporting.
+  - Opt-in anonymized product analytics (no location/search-text/user id), with opt-out
+    and DNT respect.
+
+### 2026-06-16 00:00 — Initial specification
+- **Changes:** Created the full specification (§1–§11) from the brainstorm.
+- **New requirements:** All baseline v1 functionality (auth, search, forecast, AQI,
+  favorites, preferences, offline sync) — captured by the original `/spec:decompose`.
