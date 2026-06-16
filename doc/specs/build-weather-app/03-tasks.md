@@ -9,10 +9,24 @@
 
 | Status | Count |
 |--------|-------|
-| ⏳ Pending | 20 |
-| 🔄 In Progress | 0 |
-| ✅ Completed | 0 |
-| **Total** | **20** |
+| ⏳ Pending | 3 |
+| 🔄 In Progress (partial) | 1 |
+| ✅ Completed | 9 |
+| ⛔ Blocked (env) | 8 |
+| **Total** | **21** |
+
+> **Completed this session (web-core):** 1.2, 2.1, 2.2, 2.3, 2.5, 2.6, 2.7, 2.9
+> (localStorage), 3.1. **Partial:** 1.1 (Next.js web scaffold done; Tauri shell blocked).
+> Verified: typecheck clean, 27/27 vitest tests pass, `next build` succeeds (7/7 pages,
+> 102 kB shared JS), live Open-Meteo reachable (22.2°C London). Code at `apps/web/`.
+> **Blocked on env (need Rust + Supabase):** 1.3, 1.4, 2.4, 2.8, 2.10, 3.2, 3.4, 4.2.
+> **Pending (need running UI / full suite):** 3.3 (E2E), 3.5 (coverage gate), 4.1 (a11y/perf).
+
+> **Session note (2026-06-16):** Executing **web-core only** — Rust/`cargo` and a live
+> Supabase project are unavailable in this environment. In-scope this session: 1.1 (web),
+> 1.2, 2.1, 2.2, 2.3, 2.5, 2.6, 2.7, 2.9, 3.1. Deferred/blocked: Tauri shell (1.1-desktop,
+> 2.10, 4.2), Supabase auth/db/favorites (1.3, 1.4, 2.4, 2.8, 3.2, 3.4). Preferences (2.9)
+> persist to localStorage this session; Supabase sync wired later.
 
 ---
 
