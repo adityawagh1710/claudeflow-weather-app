@@ -15,7 +15,11 @@ export function CurrentConditions({
   const { current, location } = snapshot;
 
   return (
-    <section className="glass card hero" aria-labelledby="current-heading">
+    <section
+      className="glass card hero"
+      aria-labelledby="current-heading"
+      data-testid="current-conditions"
+    >
       <div className="hero-main">
         <span className="hero-icon" aria-hidden="true">
           {wmoIcon(current.weatherCode)}
@@ -24,7 +28,7 @@ export function CurrentConditions({
           <h2 id="current-heading" className="app-title">
             {location.name}
           </h2>
-          <div className="hero-temp">
+          <div className="hero-temp" data-testid="current-temp">
             {formatTemp(current.temperature, prefs.tempUnit)}
           </div>
           <p className="muted" style={{ margin: 0 }}>
@@ -52,7 +56,7 @@ export function CurrentConditions({
         </div>
         <div className="meta-item">
           <span className="meta-label">Observed</span>
-          <span className="meta-value">
+          <span className="meta-value" data-testid="observed-time">
             {formatTime(current.observedAt, prefs.timeFormat)}
           </span>
         </div>

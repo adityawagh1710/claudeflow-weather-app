@@ -9,11 +9,20 @@
 
 | Status | Count |
 |--------|-------|
-| ⏳ Pending | 3 |
-| 🔄 In Progress (partial) | 1 |
-| ✅ Completed | 9 |
+| ⏳ Pending | 0 |
+| 🔄 In Progress | 0 |
+| ✅ Completed | 11 |
+| 🔄 Partial | 2 (Task 1.1, Task 3.3) |
 | ⛔ Blocked (env) | 8 |
 | **Total** | **21** |
+
+> **Session 2 (2026-06-16) — complete.** ✅ 3.5 (coverage gate: lib 97% lines / 93.75%
+> branches, 46 unit tests), ✅ 4.1 (a11y/perf: landmarks, combobox ARIA, contrast both
+> themes, focus-visible, axe scan zero violations), 🔄 3.3 partial (web-core E2E: IP
+> bootstrap, search→select, unit-toggle — 5/5 Playwright tests pass; offline/favorites
+> flows still need Tauri+Supabase). Verified: typecheck clean, coverage gate passes,
+> `next build` ✓, `playwright test` 5/5 pass.
+> **Still blocked on env (Rust + Supabase):** 1.3, 1.4, 2.4, 2.8, 2.10, 4.2; 1.1 desktop.
 
 > **Completed this session (web-core):** 1.2, 2.1, 2.2, 2.3, 2.5, 2.6, 2.7, 2.9
 > (localStorage), 3.1. **Partial:** 1.1 (Next.js web scaffold done; Tauri shell blocked).

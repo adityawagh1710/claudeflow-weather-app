@@ -5,6 +5,7 @@ import {
   kmhToMph,
   formatWind,
   formatTime,
+  formatDay,
   degToCompass,
 } from "@/lib/units";
 
@@ -69,5 +70,23 @@ describe("time format", () => {
 
   it("formats 12h midnight", () => {
     expect(formatTime("2024-01-01T00:30:00", "12h")).toBe("12:30 AM");
+  });
+
+  it("formats 12h noon", () => {
+    expect(formatTime("2024-01-01T12:00:00", "12h")).toBe("12:00 PM");
+  });
+
+  it("returns -- for invalid time", () => {
+    expect(formatTime("not-a-date", "24h")).toBe("--");
+  });
+});
+
+describe("formatDay", () => {
+  it("formats a weekday short name", () => {
+    expect(formatDay("2024-01-01T00:00:00")).toBe("Mon");
+  });
+
+  it("returns -- for invalid date", () => {
+    expect(formatDay("not-a-date")).toBe("--");
   });
 });

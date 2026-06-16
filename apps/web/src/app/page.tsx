@@ -32,7 +32,7 @@ function Dashboard() {
   return (
     <>
       <ThemeProvider theme={prefsApi.prefs.theme} />
-      <main className="shell">
+      <div className="shell">
         <header className="app-header">
           <div>
             <h1 className="app-title">Weather</h1>
@@ -43,29 +43,43 @@ function Dashboard() {
           <PreferencesBar api={prefsApi} />
         </header>
 
-        <LocationSearch onSelect={onSelect} bootstrap={active === null} />
+        <main className="content" aria-busy={active !== null && isLoading}>
+          <LocationSearch onSelect={onSelect} bootstrap={active === null} />
 
-        {!active && (
-          <div className="glass status">Detecting your location…</div>
-        )}
-        {active && isLoading && (
-          <div className="glass status">Loading weather for {active.name}…</div>
-        )}
-        {active && isError && (
-          <div className="glass status">
-            {error instanceof Error ? error.message : "Failed to load weather"}
-          </div>
-        )}
+          {!active && (
+            <div className="glass status" role="status">
+              Detecting your location…
+            </div>
+          )}
+          {active && isLoading && (
+            <div className="glass status" role="status">
+              Loading weather for {active.name}…
+            </div>
+          )}
+          {active && isError && (
+            <div className="glass status" role="alert">
+              {error instanceof Error
+                ? error.message
+                : "Failed to load weather"}
+            </div>
+          )}
 
-        {data && (
-          <>
-            <CurrentConditions snapshot={data} prefs={prefsApi.prefs} />
-            <HourlyForecast hourly={data.hourly} prefs={prefsApi.prefs} />
-            <DailyForecast daily={data.daily} prefs={prefsApi.prefs} />
-            <AirQuality airQuality={data.airQuality} />
-          </>
-        )}
-      </main>
+          {data && (
+            <>
+              <CurrentConditions snapshot={data} prefs={prefsApi.prefs} />
+              <HourlyForecast hourly={data.hourly} prefs={prefsApi.prefs} />
+              <DailyForecast daily={data.daily} prefs={prefsApi.prefs} />
+              <AirQuality airQuality={data.airQuality} />
+            </>
+          )}
+        </main>
+
+        <footer className="app-footer muted">
+          <p style={{ margin: 0 }}>
+            Weather data by Open-Meteo. No account or API key required.
+          </p>
+        </footer>
+      </div>
     </>
   );
 }

@@ -9,13 +9,45 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Completed | 9 |
-| 🔄 Partial | 1 (Task 1.1 — web scaffold done, Tauri shell blocked) |
-| ⏳ Pending | 3 |
+| ✅ Completed | 11 |
+| 🔄 Partial | 2 (Task 1.1 web-only; Task 3.3 web-core E2E subset) |
+| ⏳ Pending | 0 |
 | ⛔ Blocked (env) | 8 |
 | **Total** | **21** |
 
 ## Session Log
+
+### Session 2 — 2026-06-16
+
+**Scope:** the 3 web-doable pending tasks (Rust/Supabase still unavailable).
+
+**Tasks:** ✅ 3.5 (coverage gate), ✅ 4.1 (a11y/perf), 🔄 3.3 (web-core E2E subset).
+
+**Verification (independently re-run):**
+- `npm run typecheck` → clean.
+- `npm run test:coverage` → 46/46 tests; **src/lib 97.02% lines, 93.75% branches, 100%
+  functions** (gate: 80% all metrics, enforced and passing).
+- `npm run build` → ✓ standalone, 7 routes.
+- `npx playwright test` → **5/5 pass** (43.9s), incl. axe a11y scan with **zero violations**.
+
+**Files added/changed (apps/web):**
+- `vitest.config.ts` — v8 coverage, `include: src/lib/**`, 80% thresholds.
+- `src/test/validation.test.ts` (15 new tests); extended `units.test.ts`; pinned a flaky
+  clock-dependent assertion in `weatherClient.test.ts` with fake timers.
+- `playwright.config.ts` (webServer build+start, UTC/en-US for determinism), `e2e/fixtures.ts`
+  (mocked `/api/iplocation|geocode|weather`), `e2e/weather.spec.ts` (3 flows),
+  `e2e/a11y.spec.ts` (axe + h1/combobox assertions).
+- A11y fixes: `page.tsx` landmarks (`header`/`main`/`footer` siblings, single `h1`,
+  `role=status/alert`, `aria-busy`), `LocationSearch` combobox ARIA (label,
+  `aria-activedescendant`, option ids), contrast tweaks + `:focus-visible` +
+  `.visually-hidden` in `globals.css`, explicit `aria-label`s on toggles.
+- Scripts: `test:coverage`, `test:e2e`.
+
+**Notes:** benign `next start` + standalone warning (could switch webServer to
+`node .next/standalone/server.js`); `npm audit` flags transitive dev-dep advisories
+(Playwright/coverage toolchain) — not addressed (out of scope).
+
+### Session 1 — 2026-06-16
 
 ### Session 1 — 2026-06-16
 

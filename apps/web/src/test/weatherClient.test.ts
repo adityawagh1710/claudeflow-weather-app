@@ -1,9 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { getWeather, geocode, aqiCategory } from "@/lib/weatherClient";
 
+// Fixed clock so hourly trimming is deterministic (no Date.now() race).
+const FIXED_NOW = new Date("2024-06-01T12:00:00.000Z").getTime();
+
 function buildForecast() {
   // 48 hourly entries starting "now" so trimming to 24 is exercised.
-  const base = Date.now();
+  const base = FIXED_NOW;
   const time: string[] = [];
   const temperature_2m: number[] = [];
   const weather_code: number[] = [];
@@ -42,12 +45,15 @@ function buildForecast() {
 const FETCH = vi.fn();
 
 beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(FIXED_NOW);
   vi.stubGlobal("fetch", FETCH);
   FETCH.mockReset();
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 function jsonResponse(body: unknown, ok = true, status = 200): Response {

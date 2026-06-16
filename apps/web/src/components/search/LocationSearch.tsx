@@ -102,16 +102,26 @@ export function LocationSearch({
   };
 
   const showDropdown = open && debounced.trim().length >= 2;
+  const hasResults = results.length > 0;
+  const activeId =
+    showDropdown && hasResults ? `search-option-${highlight}` : undefined;
 
   return (
-    <div className="search" ref={containerRef}>
+    <div className="search" ref={containerRef} data-testid="location-search">
+      <label htmlFor="city-search" className="visually-hidden">
+        Search for a city
+      </label>
       <input
+        id="city-search"
+        data-testid="search-input"
         className="search-input"
         type="search"
         role="combobox"
         aria-expanded={showDropdown}
         aria-controls="search-listbox"
         aria-autocomplete="list"
+        aria-activedescendant={activeId}
+        aria-label="Search for a city"
         placeholder="Search city…"
         value={query}
         onChange={(e) => {
@@ -123,18 +133,26 @@ export function LocationSearch({
         onKeyDown={onKeyDown}
       />
       {showDropdown && (
-        <ul className="search-dropdown glass" id="search-listbox" role="listbox">
-          {isFetching && results.length === 0 && (
+        <ul
+          className="search-dropdown glass"
+          id="search-listbox"
+          role="listbox"
+          aria-label="City search results"
+          data-testid="search-listbox"
+        >
+          {isFetching && !hasResults && (
             <li className="search-option muted">Searching…</li>
           )}
-          {!isFetching && results.length === 0 && (
+          {!isFetching && !hasResults && (
             <li className="search-option muted">No results</li>
           )}
           {results.map((r, i) => (
             <li
               key={`${r.latitude},${r.longitude},${r.name}`}
+              id={`search-option-${i}`}
               className="search-option"
               role="option"
+              data-testid="search-option"
               aria-selected={i === highlight}
               onMouseEnter={() => setHighlight(i)}
               onMouseDown={(e) => {

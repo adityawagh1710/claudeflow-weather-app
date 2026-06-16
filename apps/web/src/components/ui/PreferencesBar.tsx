@@ -22,7 +22,9 @@ function Toggle<T extends string>({
           key={opt.value}
           type="button"
           className="pref-btn"
+          data-testid={`pref-${opt.value}`}
           aria-pressed={value === opt.value}
+          aria-label={`${label}: ${opt.label}`}
           onClick={() => onChange(opt.value)}
         >
           {opt.label}
@@ -35,7 +37,7 @@ function Toggle<T extends string>({
 export function PreferencesBar({ api }: { api: PrefsApi }) {
   const { prefs, setTempUnit, setWindUnit, setTimeFormat, setTheme } = api;
   return (
-    <div className="prefs">
+    <div className="prefs" data-testid="preferences-bar">
       <Toggle
         label="Temperature unit"
         value={prefs.tempUnit}
