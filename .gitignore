@@ -1,0 +1,27 @@
+# Local agent/tooling config (not part of the project)
+.claude/
+
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# Test / coverage artifacts
+coverage/
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
