@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# --- builder: typecheck, test, and build ---
+# --- builder: typecheck, coverage-gated tests, and build ---
 FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
@@ -32,7 +32,7 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
 RUN npm run typecheck \
-  && npm run test \
+  && npm run test:coverage \
   && npm run build
 
 # --- runner: minimal production image ---
